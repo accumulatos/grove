@@ -1,0 +1,20 @@
+author: Tekt Industries
+type: lib
+description: A library for various Grove sensors
+version: 1.0
+
+sources:
+  - src
+filesystem:
+  - fs
+
+libs:
+  - origin: https://github.com/mongoose-os-libs/mjs
+  - origin: https://github.com/mongoose-os-libs/adc
+  - origin: https://github.com/mongoose-os-libs/pwm
+  
+tags:
+  - c
+  - js
+
+manifest_version: 2017-04-04
