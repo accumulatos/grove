@@ -164,9 +164,9 @@ let Grove = {
     },
   },
   TemperatureSensor: {
-    // ## **`Grove.TemperatureSensor.get(pin)`**
+    // ## **`Grove.TemperatureSensor.getTemperature(pin)`**
     // Get the temperature
-    get: function(pin) {
+    getTemperature: function(pin) {
       if (ADC.enable(pin)) {
           let value = ADC.read(pin);
           let M = 4095/value-1;
