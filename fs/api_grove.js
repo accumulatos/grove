@@ -80,9 +80,7 @@ let Grove = {
     getAngle: function(pin) {
       if (ADC.enable(pin)) {
         let val = ADC.read(pin);
-        let voltage = val * 3.3 / 4095; // 3.3V reference, 12 bit ADC
-        let degrees = voltage * 300 / 5;  // 300 degree full angle, 5V grove ref
-        return degrees;
+        return val * 300 / 4095; // 300 degree full angle, 12 bit ADC
       }
       return 0;
     },
