@@ -1,6 +1,7 @@
 load('api_gpio.js');
 load('api_adc.js');
 load('api_pwm.js');
+load('api_timer.js')
 
 let Grove = {
   Button: {
@@ -8,7 +9,7 @@ let Grove = {
     // Attach a handler for the button on the given pin. Example:
     // ```javascript
     // Grove.Button.attach(pin, function(pin) {
-    //    print('Button event at pin', pin);
+    //   print('Button event at pin', pin);
     // }, null);
     // ```
     attach: function(pin, handler) {
@@ -21,7 +22,7 @@ let Grove = {
     // Attach a handler for the touch sensor on the given pin. Example:
     // ```javascript
     // Grove.TouchSensor.attach(pin, function(pin) {
-    //    print('Touch sensor event at pin', pin);
+    //   print('Touch sensor event at pin', pin);
     // }, null);
     // ```
     attach: function(pin, handler) {
@@ -70,7 +71,7 @@ let Grove = {
     // Turn off the buzzer on the given pin.
     off: function(pin) {
       GPIO.set_mode(pin, GPIO.MODE_OUTPUT);
-      GPIO.write(pin,0);
+      GPIO.write(pin, 0);
     },
   },
   RotaryAngleSensor: {
@@ -90,7 +91,7 @@ let Grove = {
     // Attach a handler for the motion sensor on the given pin. Example:
     // ```javascript
     // Grove.MotionSensor.attach(pin, function(pin) {
-    //    print('Motion sensor event at pin', pin);
+    //   print('Motion sensor event at pin', pin);
     // }, null);
     // ```
     attach: function(pin, handler) {
@@ -102,12 +103,12 @@ let Grove = {
   },
   _vibrationHandler: undefined,
   VibrationSensor: {
-    //## **`Grove.VibrationSensor.attach(pin, handler)`**
-    //Attach a handler for the vibration sensor on the given pin. Example:
+    // ## **`Grove.VibrationSensor.attach(pin, handler)`**
+    // Attach a handler for the vibration sensor on the given pin. Example:
     // ```javascript
-    //Grove.VibrationSensor.attach(pin, function(pin) {
-        //print('Vibration sensor event at pin', pin);
-    //}, null);
+    // Grove.VibrationSensor.attach(pin, function(pin) {
+    //   print('Vibration sensor event at pin', pin);
+    // }, null);
     // ```
     attach: function(pin, handler) {
       GPIO.set_mode(pin, GPIO.MODE_INPUT);
@@ -115,53 +116,112 @@ let Grove = {
       GPIO.enable_int(pin);
       Grove._vibrationHandler = handler;
     },
-    get: function(pin) {
-      return ADC.read(pin);
-    },
   },
+  _lightHandler: undefined,
+  _lightThreshold: 0,
+  _lightPin: undefined,
+  _lightTimer: undefined,
   LightSensor: {
-    // ## **`Grove.LightSensor.get(pin)`**
-    // Test whether light on.
-    get: function(pin) {
-      let light = ADC.read(pin);
-      if (light>3000) {
-        print('Light too weak', 4095-light);
+    // ## **`Grove.LightSensor.attach(pin, threshold, period, handler)`**
+    // Attach a handler for the vibration sensor on the given pin.
+    // (Approximately) every period milliseconds, the light sensor will be
+    // checked and if the reading is greater than or equal to the given
+    // threshold, then the handler will be called. Example:
+    // ```javascript
+    // Grove.LightSensor.attach(pin, 500, 100 /* 10 Hz */, function(value) {
+    //   print('Light sensor event with value', value);
+    //}, null);
+    // ```
+    attach: function(pin, threshold, period, handler) {
+      ADC.enable(pin);
+      Grove._lightThreshold = threshold;
+      Grove._lightHandler = handler;
+      Grove._lightPin = pin;
+      Grove._lightTimer = Timer.set(period, true, function() {
+        let value = ADC.read(Grove._lightPin);
+        if (value >= Grove._lightThreshold) {
+          Grove._lightHandler(value);
+        }
+      }, null);
+    },
+    // ## **`Grove.LightSensor.detach()`**
+    // Remove any previous attached handlers if you no longer want them to run
+    detach: function() {
+      if (Grove._lightTimer !== undefined) {
+        Timer.del(Grove._lightTimer);
+        Grove._lightTimer = undefined;
       }
-      else {
-        print('light detected', 4095-light);
+    }
+    // ## **`Grove.LightSensor.getRaw(pin)`**
+    // Get the raw light sensor reading (0-4095)
+    getRaw: function(pin) {
+      if (ADC.enable(pin)) {
+        return ADC.read(pin);
       }
+      return 0;
     },
   },
   TemperatureSensor: {
     // ## **`Grove.TemperatureSensor.get(pin)`**
-    //get the measured temperature.
+    // Get the temperature
     get: function(pin) {
-      if(ADC.enable(pin)) {
+      if (ADC.enable(pin)) {
           let value = ADC.read(pin);
           let M = 4095/value-1;
           let temperature = 1/(Math.log(M)/4275+1/298.15)-273.15;
           return temperature;
       }
+      return 0;
     },
   },
+  _soundHandler: undefined,
+  _soundThreshold: 0,
+  _soundPin: undefined,
+  _soundTimer: undefined,
   SoundSensor: {
-    // ## **`Grove.SoundSensor.get(pin)`**
-    //Test if a sound detected.
-    get: function (pin) {
-      if(ADC.enable(pin)) {
-        let sound = 0;
-        for(let i=0; i<32; i++){
-          if (ADC.read(pin) > sound) {
-            sound = ADC.read(pin);
+    // ## **`Grove.SoundSensor.attach(pin, threshold, period, handler)`**
+    // Attach a handler for the sound sensor on the given pin.
+    // (Approximately) every period milliseconds, 32 readings from the sound
+    // sensor will be taken and if any of them meet or exceed the given
+    // threshold, then the handler will be called. Example:
+    // ```javascript
+    // Grove.SoundSensor.attach(pin, 500, 100 /* 10 Hz */ function(maxValue) {
+    //   print('Light sensor event with maxValue', maxValue);
+    //}, null);
+    // ```
+    attach: function(pin, threshold, period, handler) {
+      ADC.enable(pin);
+      Grove._soundThreshold = threshold;
+      Grove._soundHandler = handler;
+      Grove._soundPin = pin;
+      Grove._soundTimer = Timer.set(period, true, function() {
+        let maxValue = 0;
+        for (let i = 0; i < 32; i++) {
+          let value = ADC.read(Grove._soundPin);
+          if (value > maxValue) {
+            maxValue = value;
           }
         }
-        if (sound>500) {
-          print('Sound detected', sound);
+        if (maxValue >= Grove._soundThreshold) {
+          Grove._soundHandler(value);
         }
-        else {
-          print('Sound too weak', sound);
-        }
+      }, null);
+    },
+    // ## **`Grove.SoundSensor.detach()`**
+    // Remove any previous attached handlers if you no longer want them to run
+    detach: function() {
+      if (Grove._soundTimer !== undefined) {
+        Timer.del(Grove._soundTimer);
+        Grove._soundTimer = undefined;
       }
     }
+    // ## **`Grove.SoundSensor.getRaw(pin)`**
+    // Get the raw sound sensor reading (0-4095)
+    getRaw: function(pin) {
+      if (ADC.enable(pin)) {
+        return ADC.read(pin);
+      }
+      return 0;
+    },
   },
 };
