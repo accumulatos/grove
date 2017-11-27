@@ -78,11 +78,13 @@ let Grove = {
     // ## **`Grove.RotaryAngleSensor.getAngle(pin)`**
     // get the angle of a rotary angle sensor on the given pin.
     getAngle: function(pin) {
-      ADC.enable(pin);
-      let val = ADC.read(pin);
-      let voltage = val * 3.3 / 4095; // 3.3V reference, 12 bit ADC
-      let degrees = voltage * 300 / 5;  // 300 degree full angle, 5V grove ref
-      return degrees;
+      if (ADC.enable(pin)) {
+        let val = ADC.read(pin);
+        let voltage = val * 3.3 / 4095; // 3.3V reference, 12 bit ADC
+        let degrees = voltage * 300 / 5;  // 300 degree full angle, 5V grove ref
+        return degrees;
+      }
+      return 0;
     },
   },
   _motionHandler: undefined,
