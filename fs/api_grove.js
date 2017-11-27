@@ -1,7 +1,7 @@
 load('api_gpio.js');
 load('api_adc.js');
 load('api_pwm.js');
-load('api_timer.js')
+load('api_timer.js');
 
 let Grove = {
   Button: {
@@ -153,7 +153,7 @@ let Grove = {
         Timer.del(Grove._lightTimer);
         Grove._lightTimer = undefined;
       }
-    }
+    },
     // ## **`Grove.LightSensor.getRaw(pin)`**
     // Get the raw light sensor reading (0-4095)
     getRaw: function(pin) {
@@ -214,7 +214,7 @@ let Grove = {
         Timer.del(Grove._soundTimer);
         Grove._soundTimer = undefined;
       }
-    }
+    },
     // ## **`Grove.SoundSensor.getRaw(pin)`**
     // Get the raw sound sensor reading (0-4095)
     getRaw: function(pin) {
