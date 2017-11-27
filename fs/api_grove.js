@@ -12,7 +12,7 @@ let Grove = {
     // }, null);
     // ```
     attach: function(pin, handler) {
-      GPIO.set_button_handler(pin, GPIO.PULL_UP, GPIO.INT_EDGE_NEG, 200, handler, true);
+      GPIO.set_button_handler(pin, GPIO.PULL_UP, GPIO.INT_EDGE_POS, 200, handler, true);
     },
   },
   _touchHandler: undefined,
