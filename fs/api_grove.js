@@ -183,12 +183,12 @@ let Grove = {
   SoundSensor: {
     // ## **`Grove.SoundSensor.attach(pin, threshold, period, handler)`**
     // Attach a handler for the sound sensor on the given pin.
-    // (Approximately) every period milliseconds, 32 readings from the sound
-    // sensor will be taken and if any of them meet or exceed the given
+    // (Approximately) every period milliseconds, 16 readings from the sound
+    // sensor will be taken and if the average meets or exceed the given
     // threshold, then the handler will be called. Example:
     // ```javascript
-    // Grove.SoundSensor.attach(pin, 500, 100 /* 10 Hz */ function(maxValue) {
-    //   print('Light sensor event with maxValue', maxValue);
+    // Grove.SoundSensor.attach(pin, 500, 100 /* 10 Hz */ function(avgValue) {
+    //   print('Light sensor event with avgValue', avgValue);
     //}, null);
     // ```
     attach: function(pin, threshold, period, handler) {
@@ -197,14 +197,12 @@ let Grove = {
       Grove._soundHandler = handler;
       Grove._soundPin = pin;
       Grove._soundTimer = Timer.set(period, true, function() {
-        let maxValue = 0;
-        for (let i = 0; i < 32; i++) {
-          let value = ADC.read(Grove._soundPin);
-          if (value > maxValue) {
-            maxValue = value;
-          }
+        let avgValue = 0;
+        for (let i = 0; i < 16; i++) {
+          avgValue += ADC.read(Grove._soundPin);
         }
-        if (maxValue >= Grove._soundThreshold) {
+        avgValue /= 16;
+        if (avgValue >= Grove._soundThreshold) {
           Grove._soundHandler(value);
         }
       }, null);
