@@ -201,7 +201,7 @@ let Grove = {
         }
         avgValue /= 16;
         if (avgValue >= Grove._soundThreshold) {
-          Grove._soundHandler(value);
+          Grove._soundHandler(avgValue);
         }
       }, null);
     },
